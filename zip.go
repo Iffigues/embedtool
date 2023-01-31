@@ -5,6 +5,7 @@ import (
 	"embed"
 	"archive/zip"
 	"io/ioutil"
+	"strings"
 )
 
 type Zip struct {
@@ -16,7 +17,7 @@ func (z *Zip)GetBytes(e embed.FS, src string) (b []byte, err error) {
 }
 
 
-func (z *Zip)GetReader(body []byte, size int64) (err error) {
+func (z *Zip)GetReader(body []byte) (err error) {
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
 		return err
@@ -36,14 +37,18 @@ func (z *Zip) ReadZipFile(zf *zip.File) ([]byte, error) {
 }
 
 
-func (z *Zip) ParseReader() (array []byte, err error) {
+func (z *Zip) ParseReader() (array map[string][]byte, err error) {
+    var files map[string][]byte
+    files = make(map[string][]byte)
     for _, zipFile := range z.Reader.File {
-        unzippedFileBytes, err := z.ReadZipFile(zipFile)
+	unzippedFileBytes, err := z.ReadZipFile(zipFile)
         if err != nil {
             continue
         }
-	array = append(array, unzippedFileBytes...)
-        _ = unzippedFileBytes // this is unzipped file bytes
+	if !strings.HasSuffix(zipFile.Name, "/") {
+		files[zipFile.Name] = unzippedFileBytes
+	}
+
     }
-    return array, nil
+    return files, nil
 }
