@@ -8,6 +8,6 @@ import (
 var f embed.FS
 
 func main() {
-	tete(f, "hello/a.zip")
+	tete(f, "hello/archive.tar")
 	fmt.Println("end")
 }

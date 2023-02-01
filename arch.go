@@ -25,7 +25,10 @@ func GetArchive(arch Archive, e embed.FS, src string) (map[string][]byte, error)
 }
 
 func tete(e embed.FS, a string) {
-	zz := &Zip{}
+	zz := &Tar{}
 	rrr, zzz := GetArchive(zz, e, a)
-	fmt.Println(rrr, zzz)
+	fmt.Println(zzz)
+	for ee, i := range rrr {
+		fmt.Println(ee, "\n",string(i))
+	}
 }

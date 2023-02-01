@@ -5,7 +5,7 @@ import (
 	"embed"
 	"io"
 	"archive/tar"
-	//"io/ioutil"
+	"io/ioutil"
 )
 
 type Tar struct {
@@ -17,7 +17,7 @@ func (z *Tar)GetBytes(e embed.FS, src string) (b []byte, err error) {
 }
 
 
-func (z *Tar)GetReader(body []byte, size int64) (err error) {
+func (z *Tar)GetReader(body []byte) (err error) {
 	tarReader := tar.NewReader(bytes.NewReader(body))
 	z.Reader = tarReader
 	return nil
@@ -35,22 +35,24 @@ func (z *Tar) ReadZipFile(zf *tar.File) ([]byte, error) {
 */
 
 
-func (z *Tar) ParseReader() (array []byte, err error) {
+func (z *Tar) ParseReader() (files map[string][]byte, err error) {
+	files = make(map[string][]byte)
 	for {
-		_, err := z.Reader.Next()
+		header, err := z.Reader.Next()
 		if err == io.EOF {
 			break
 		} else if err != nil {
 			return nil, err
 		}
-		/*path := filepath.Join(target, header.Name)
 		info := header.FileInfo()
 		if info.IsDir() {
-			if err = os.MkdirAll(path, info.Mode()); err != nil {
-				return err
-			}
 			continue
-		}*/
+		}
+		bs, err  := ioutil.ReadAll(z.Reader)
+		if err != nil {
+			return nil, err
+		}
+		files[header.Name] = bs
 	}
-	return nil, nil
+	return
 }
