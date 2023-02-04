@@ -1,4 +1,4 @@
-package main
+package embedtool
 
 import (
 	"bytes"
@@ -22,18 +22,6 @@ func (z *Tar)GetReader(body []byte) (err error) {
 	z.Reader = tarReader
 	return nil
 }
-
-/*
-func (z *Tar) ReadZipFile(zf *tar.File) ([]byte, error) {
-    f, err := zf.Open()
-    if err != nil {
-        return nil, err
-    }
-    defer f.Close()
-    return ioutil.ReadAll(f)
-}
-*/
-
 
 func (z *Tar) ParseReader() (files map[string][]byte, err error) {
 	files = make(map[string][]byte)

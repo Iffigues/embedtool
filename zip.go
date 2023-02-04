@@ -1,4 +1,4 @@
-package main
+package embedtool
 
 import (
 	"bytes"
@@ -37,8 +37,7 @@ func (z *Zip) ReadZipFile(zf *zip.File) ([]byte, error) {
 }
 
 
-func (z *Zip) ParseReader() (array map[string][]byte, err error) {
-    var files map[string][]byte
+func (z *Zip) ParseReader() (files map[string][]byte, err error) {
     files = make(map[string][]byte)
     for _, zipFile := range z.Reader.File {
 	unzippedFileBytes, err := z.ReadZipFile(zipFile)
@@ -50,5 +49,5 @@ func (z *Zip) ParseReader() (array map[string][]byte, err error) {
 	}
 
     }
-    return files, nil
+    return
 }
