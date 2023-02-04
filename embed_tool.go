@@ -1,9 +1,9 @@
 package embedtool
 
 import (
-	"embed"
 	"io/fs"
 	"os"
+	"embed"
 )
 
 func IsDir( src string, f embed.FS) (dir bool, err error) {
@@ -18,7 +18,7 @@ func IsDir( src string, f embed.FS) (dir bool, err error) {
 	return state.IsDir(), nil
 }
 
-func CopyFile(dest, src string, overwrite bool, f embed.FS) (err error) {
+func CopyFile(dest, src  string, overwrite bool, f embed.FS) (err error) {
 	if _, err := os.Stat(dest); err == nil {
 		if !overwrite {
 			return err
@@ -29,12 +29,13 @@ func CopyFile(dest, src string, overwrite bool, f embed.FS) (err error) {
 		return err
 	}
 	if isDir, err := FsFileIsDir(file); (err != nil) || (isDir) {
+		println(isDir)
 		return err
 	}
 	return CreateFile(file, dest)
 }
 
-func copyFileSetPerm(dest, src string, mode fs.FileMode, overwrite bool, f embed.FS) (err error) {
+func copyFileSetPerm(dest, src  string, mode fs.FileMode, overwrite bool, f embed.FS) (err error) {
 	if _, err := os.Stat(dest); err == nil {
 		if !overwrite {
 			return err

@@ -4,7 +4,7 @@ package embedtool
 import (
 	"embed"
 	"os"
-	"errors"
+	"path/filepath"
 )
 
 func DirExist(path string) (bool, error) {
@@ -19,6 +19,23 @@ func DirExist(path string) (bool, error) {
 }
 
 func copyEmbededDir(f embed.FS, src, dest string, recursive bool) (err error) {
+	dires, files, err := ListEMbed(f, src)
+	if err != nil  {
+		return err
+	}
+
+	for _, val := range files {
+		CopyFile(filepath.Join(dest, "/", val), filepath.Join(src, "/", val), false, f)
+	}
+
+	for _, val := range dires {
+		os.Mkdir(filepath.Join(dest, "/", val), 777)
+	}
+	if recursive {
+		for _, val := range dires {
+			copyEmbededDir(f, filepath.Join(src, "/", val), filepath.Join(dest, "/", val), true)
+		}
+	}
 	return
 }
 
@@ -27,15 +44,5 @@ func CopyEmbededDir(f embed.FS, src, dest string, recursive bool) (err error) {
 	if isDir, err := DirExist(dest); err != nil || !isDir {
 		return err
 	}
-	isDir, err := IsDir(src, f)
-
-	if err != nil {
-		return err
-	}
-
-	if  !isDir {
-		return errors.New("src is not a directory")
-	}
-
 	return copyEmbededDir(f, src, dest, recursive)
 }
