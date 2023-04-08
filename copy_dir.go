@@ -1,6 +1,5 @@
 package embedtool
 
-
 import (
 	"embed"
 	"os"
@@ -20,7 +19,7 @@ func DirExist(path string) (bool, error) {
 
 func copyEmbededDir(f embed.FS, src, dest string, recursive bool) (err error) {
 	dires, files, err := ListEMbed(f, src)
-	if err != nil  {
+	if err != nil {
 		return err
 	}
 
