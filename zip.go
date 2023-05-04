@@ -73,11 +73,81 @@ func (z *Zip) ParseReader() (files map[string][]byte, err error) {
 	return
 }
 
+func (z *Zip) IsDir(f embed.FS, src, dest string, rec bool, zipw *zip.Writer) (err error) {
+	z.Walk(f, src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		isDir, err := IsDir(path, f)
+		if err != nil {
+			return err
+		}
+
+		relpath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		h := &zip.FileHeader{
+			Name:   relpath,
+			Method: zip.Deflate,
+		}
+		if isDir {
+			h.Name += "/"
+			h.Method = zip.Store
+			_, err = zipw.CreateHeader(h)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		w, err := zipw.CreateHeader(h)
+		if err != nil {
+			return err
+		}
+		if !isDir {
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			_, err = io.Copy(w, file)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}, rec)
+	return nil
+}
+
+func (z *Zip) IsFil(f embed.FS, src, dest string, rec bool, zipw *zip.Writer) (err error) {
+	f.ReadFile(src)
+	h := &zip.FileHeader{
+		Name:   filepath.Base(src),
+		Method: zip.Deflate,
+	}
+	w, err := zipw.CreateHeader(h)
+	if err != nil {
+		panic(err)
+	}
+	fn, err := f.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(fn)
+	if err != nil {
+		panic(err)
+	}
+	return nil
+}
+
 func (z *Zip) Make(f embed.FS, src, dest string, rec bool) (err error) {
 	node, err := f.Open(src)
 	if err != nil {
 		return err
 	}
+	defer node.Close()
 	isDir, err := FsFileIsDir(node)
 	if err != nil {
 		return err
@@ -91,70 +161,9 @@ func (z *Zip) Make(f embed.FS, src, dest string, rec bool) (err error) {
 	zipw := zip.NewWriter(zipf)
 	defer zipw.Close()
 	if isDir {
-
-		z.Walk(f, src, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			isDir, err := IsDir(path, f)
-			if err != nil {
-				fmt.Println(err)
-				return err
-			}
-			fmt.Println(path, isDir)
-			relpath, err := filepath.Rel(src, path)
-			if err != nil {
-				return err
-			}
-			h := &zip.FileHeader{
-				Name:   relpath,
-				Method: zip.Deflate,
-			}
-			if isDir {
-				h.Name += "/"
-				h.Method = zip.Store
-				_, err = zipw.CreateHeader(h)
-				if err != nil {
-					return err
-				}
-				return nil
-			}
-			w, err := zipw.CreateHeader(h)
-			if err != nil {
-				return err
-			}
-			if !isDir {
-				file, err := os.Open(path)
-				if err != nil {
-					return err
-				}
-				defer file.Close()
-
-				_, err = io.Copy(w, file)
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		}, rec)
+		return z.IsDir(f, src, dest, rec, zipw)
 	} else {
-		f.ReadFile(src)
-		h := &zip.FileHeader{
-			Name:   filepath.Base(src),
-			Method: zip.Deflate,
-		}
-		w, err := zipw.CreateHeader(h)
-		if err != nil {
-			panic(err)
-		}
-		fn, err := f.ReadFile(src)
-		if err != nil {
-			return err
-		}
-		_, err = w.Write(fn)
-		if err != nil {
-			panic(err)
-		}
+		return z.IsFil(f, src, dest, rec, zipw)
 	}
 	return nil
 }

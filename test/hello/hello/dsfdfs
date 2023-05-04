@@ -1,1 +1,43 @@
-sdfdfsdsf
+function brainfuck(input) {
+  const memory = new Uint8Array(30000);
+  let pointer = 0; 
+  let output = ''; 
+  const commands = {
+    '>': () => pointer++,
+    '<': () => pointer--,
+    '+': () => memory[pointer]++,
+    '-': () => memory[pointer]--,
+    '.': () => output += String.fromCharCode(memory[pointer]),
+    ',': () => memory[pointer] = input.shift().charCodeAt(),
+    '[': () => {
+      if (memory[pointer] === 0) {
+        let depth = 1;
+        while (depth > 0) {
+          pointer++;
+          if (input[pointer] === '[') depth++;
+          if (input[pointer] === ']') depth--;
+        }
+      }
+    },
+    ']': () => {
+      let depth = 1;
+      while (depth > 0) {
+        pointer--;
+        if (input[pointer] === '[') depth--;
+        if (input[pointer] === ']') depth++;
+      }
+      pointer--;
+    }
+  };
+  let i = 0;
+  while (i < input.length) {
+    const command = commands[input[i]];
+    if (command) command();
+    i++;
+  }
+
+  return output;
+}
+const code = '++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.';
+const output = brainfuck(code);
+alert(output)
